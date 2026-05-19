@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Users can read/write their own document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Matches are readable by all authenticated users, writable only by functions
+    match /matches/{matchId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // only Cloud Functions write matches
+    }
+
+    // Groups: members can read, admin can update scoring system
+    match /groups/{groupId} {
+      allow read: if isAuthenticated() &&
+        request.auth.uid in resource.data.memberIds;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.adminUserId;
+    }
+
+    // Bets: owner can write, members of same group can read after match finishes
+    match /bets/{betId} {
+      allow create, update: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.userId;
+      allow read: if isAuthenticated();
+    }
+
+    // Ranking: readable by group members
+    match /rankings/{rankingId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // only Cloud Functions write rankings
+    }
+
+    // Login attempts: only functions read/write
+    match /loginAttempts/{hash} {
+      allow read, write: if false;
+    }
+  }
+}

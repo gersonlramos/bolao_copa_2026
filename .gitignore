@@ -1,0 +1,30 @@
+# Build outputs
+**/build/
+**/lib/
+**/.gradle/
+
+# Secrets - NEVER commit these
+functions/.env
+functions/.env.local
+google-services.json
+app/google-services.json
+
+# Android
+*.iml
+.idea/
+*.keystore
+!debug.keystore
+local.properties
+
+# Node
+node_modules/
+
+# AI tools
+.claude/
+.kiro/
+*.md
+!README.md
+
+# OS
+.DS_Store
+Thumbs.db

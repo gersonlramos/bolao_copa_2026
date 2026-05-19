@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- White ball (circle centered at 54,54 radius 28) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M26,54 A28,28,0,1,0,82,54 A28,28,0,1,0,26,54 Z"/>
+
+    <!-- Ball outline -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="1.5"
+        android:pathData="M26,54 A28,28,0,1,0,82,54 A28,28,0,1,0,26,54 Z"/>
+
+    <!-- 5 seam lines: from inner pentagon vertices to ball edge -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="2"
+        android:pathData="M54,46 L54,28 M61.6,51.5 L78.7,45.9 M58.7,60.5 L69.3,75.1 M49.3,60.5 L38.7,75.1 M46.4,51.5 L29.3,45.9"/>
+
+    <!-- Central pentagon (filled black) -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M54,46 L61.6,51.5 L58.7,60.5 L49.3,60.5 L46.4,51.5 Z"/>
+
+</vector>
