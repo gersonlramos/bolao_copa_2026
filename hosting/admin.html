@@ -264,7 +264,7 @@
       firebase.initializeApp(firebaseConfig);
       const auth = firebase.auth();
       const db = firebase.firestore();
-      const functions = firebase.functions("southamerica-east1");
+      const functions = firebase.app().functions("southamerica-east1");
 
       // Handle redirect result when returning from Google sign-in
       auth.getRedirectResult().catch((err) => {
