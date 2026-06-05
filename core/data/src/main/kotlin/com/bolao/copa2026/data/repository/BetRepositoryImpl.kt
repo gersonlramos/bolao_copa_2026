@@ -5,16 +5,16 @@ import com.bolao.copa2026.data.source.FirestoreBetDataSource
 import com.bolao.copa2026.domain.model.AppError
 import com.bolao.copa2026.domain.model.Bet
 import com.bolao.copa2026.domain.model.BetWithUser
-import com.bolao.copa2026.domain.model.Match
-import com.bolao.copa2026.domain.model.MatchStatus
 import com.bolao.copa2026.domain.repository.BetRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
-import java.util.UUID
 import javax.inject.Inject
 
 class BetRepositoryImpl @Inject constructor(
@@ -62,22 +62,40 @@ class BetRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun observeBetsForMatch(groupId: String, matchId: String): Flow<List<BetWithUser>> {
-        val currentUid = auth.currentUser?.uid
-        return betDataSource.observeBetsForMatch(groupId, matchId).map { docs ->
-            docs.mapNotNull { doc ->
+    override fun observeBetsForMatch(groupId: String, matchId: String): Flow<List<BetWithUser>> =
+        combine(
+            betDataSource.observeBetsForMatch(groupId, matchId),
+            groupMembersFlow(groupId)
+        ) { betDocs, memberMap ->
+            val betsByUser = betDocs.associate { doc ->
                 val bet = doc.toBet()
-                val matchDoc = db.collection("matches").document(matchId)
-                // Visibility: hide other users' bets if match not finished
-                // (reactive check is done on the client — server-side collection rules enforce this too)
-                val isOwn = bet.userId == currentUid
-                BetWithUser(
-                    bet = bet,
-                    userId = bet.userId,
-                    displayName = doc.getString("displayName") ?: bet.userId
-                )
+                bet.userId to bet
             }
+            memberMap.entries
+                .map { (userId, displayName) ->
+                    BetWithUser(
+                        bet = betsByUser[userId],
+                        userId = userId,
+                        displayName = displayName
+                    )
+                }
+                .sortedWith(
+                    compareByDescending<BetWithUser> { it.bet?.score ?: -1 }
+                        .thenBy { it.displayName }
+                )
         }
+
+    private fun groupMembersFlow(groupId: String): Flow<Map<String, String>> = callbackFlow {
+        val reg = db.collection("groups").document(groupId)
+            .collection("members")
+            .addSnapshotListener { snap, err ->
+                if (err != null) { close(err); return@addSnapshotListener }
+                val map = snap?.documents?.associate {
+                    it.id to (it.getString("displayName") ?: "")
+                } ?: emptyMap()
+                trySend(map)
+            }
+        awaitClose { reg.remove() }
     }
 
     override fun observeUserBets(groupId: String): Flow<List<Bet>> {

@@ -21,6 +21,7 @@ type ScoringCategory =
   | "CORRECT_WINNER_AND_WINNER_GOALS"
   | "CORRECT_WINNER_AND_LOSER_GOALS"
   | "CORRECT_DRAW"
+  | "CORRECT_WINNER"
   | "NO_SCORE";
 
 interface ScoringSystem {
@@ -28,6 +29,7 @@ interface ScoringSystem {
   correctWinnerAndWinnerGoals: number;
   correctWinnerAndLoserGoals: number;
   correctDraw: number;
+  correctWinner: number;
 }
 
 function winner(home: number, away: number): "HOME" | "AWAY" | "DRAW" {
@@ -64,7 +66,7 @@ function scoreWithSystem(
         cands.push({ cat: "CORRECT_WINNER_AND_LOSER_GOALS", pts: system.correctWinnerAndLoserGoals });
       category = cands.length > 0
         ? cands.reduce((a, b) => b.pts >= a.pts ? b : a).cat
-        : "NO_SCORE";
+        : "CORRECT_WINNER";
     }
   }
 
@@ -73,6 +75,7 @@ function scoreWithSystem(
     CORRECT_WINNER_AND_WINNER_GOALS: system.correctWinnerAndWinnerGoals,
     CORRECT_WINNER_AND_LOSER_GOALS: system.correctWinnerAndLoserGoals,
     CORRECT_DRAW: system.correctDraw,
+    CORRECT_WINNER: system.correctWinner,
     NO_SCORE: 0,
   };
 

@@ -18,3 +18,4 @@ export { calculateScores } from "./calculateScores";
 export { recalculateGroupScores } from "./recalculateGroupScores";
 export { loginAttempt } from "./loginAttempt";
 export { generateInviteCode } from "./generateInviteCode";
+export { verifyPurchase } from "./verifyPurchase";

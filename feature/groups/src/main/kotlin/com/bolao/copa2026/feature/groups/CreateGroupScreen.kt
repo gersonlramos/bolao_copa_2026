@@ -76,6 +76,7 @@ fun CreateGroupScreen(
                 Triple("Vencedor + gols do vencedor", state.correctWinner, viewModel::onCorrectWinnerChange),
                 Triple("Vencedor + gols do perdedor", state.correctWinnerLoser, viewModel::onCorrectWinnerLoserChange),
                 Triple("Empate certo", state.correctDraw, viewModel::onCorrectDrawChange),
+                Triple("Só o vencedor", state.correctWinnerOnly, viewModel::onCorrectWinnerOnlyChange),
             ).forEach { (label, value, onChange) ->
                 OutlinedTextField(
                     value = value,

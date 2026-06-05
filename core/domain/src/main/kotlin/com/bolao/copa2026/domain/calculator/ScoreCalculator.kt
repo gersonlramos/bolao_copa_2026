@@ -25,6 +25,7 @@ object ScoreCalculator {
             ScoringCategory.CORRECT_WINNER_AND_WINNER_GOALS -> system.correctWinnerAndWinnerGoals
             ScoringCategory.CORRECT_WINNER_AND_LOSER_GOALS -> system.correctWinnerAndLoserGoals
             ScoringCategory.CORRECT_DRAW -> system.correctDraw
+            ScoringCategory.CORRECT_WINNER -> system.correctWinner
             ScoringCategory.NO_SCORE -> 0
         }
         return ScoredBet(bet, category, points)
@@ -66,8 +67,8 @@ object ScoreCalculator {
         if (betWinner == Winner.AWAY && bet.homeGoals == result.homeGoals)
             candidates += ScoringCategory.CORRECT_WINNER_AND_LOSER_GOALS to system.correctWinnerAndLoserGoals
 
-        // Award the highest-valued category; ties are broken arbitrarily (Req. 8.6)
-        return candidates.maxByOrNull { it.second }?.first ?: ScoringCategory.NO_SCORE
+        // Award the highest-valued category; fallback to CORRECT_WINNER when no goal matched
+        return candidates.maxByOrNull { it.second }?.first ?: ScoringCategory.CORRECT_WINNER
     }
 
     /**

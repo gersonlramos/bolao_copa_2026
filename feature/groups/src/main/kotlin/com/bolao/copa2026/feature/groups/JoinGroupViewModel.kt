@@ -43,6 +43,7 @@ class JoinGroupViewModel @Inject constructor(
                         e.message?.contains("ExpiredInviteCode") == true -> "Código expirado"
                         e.message?.contains("AlreadyMember") == true -> "Você já é membro deste grupo"
                         e.message?.contains("GroupFull") == true -> "Grupo cheio"
+                        e.message?.contains("GroupLimitReached") == true -> "Você atingiu o limite de grupos. Seja VIP para participar de mais grupos."
                         else -> "Erro ao entrar no grupo"
                     }
                     _state.update { it.copy(isLoading = false, error = msg) }

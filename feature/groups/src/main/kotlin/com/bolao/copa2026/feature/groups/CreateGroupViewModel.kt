@@ -18,6 +18,7 @@ data class CreateGroupUiState(
     val correctWinner: String = "7",
     val correctWinnerLoser: String = "5",
     val correctDraw: String = "4",
+    val correctWinnerOnly: String = "2",
     val nameError: String? = null,
     val scoringError: String? = null,
     val isLoading: Boolean = false,
@@ -39,6 +40,7 @@ class CreateGroupViewModel @Inject constructor(
     fun onCorrectWinnerChange(v: String) = _state.update { it.copy(correctWinner = v, scoringError = null) }
     fun onCorrectWinnerLoserChange(v: String) = _state.update { it.copy(correctWinnerLoser = v, scoringError = null) }
     fun onCorrectDrawChange(v: String) = _state.update { it.copy(correctDraw = v, scoringError = null) }
+    fun onCorrectWinnerOnlyChange(v: String) = _state.update { it.copy(correctWinnerOnly = v, scoringError = null) }
 
     fun create() {
         val s = _state.value
@@ -60,8 +62,11 @@ class CreateGroupViewModel @Inject constructor(
         val cd = s.correctDraw.toIntOrNull() ?: run {
             _state.update { it.copy(scoringError = "Pontuações inválidas") }; return
         }
+        val cwo = s.correctWinnerOnly.toIntOrNull() ?: run {
+            _state.update { it.copy(scoringError = "Pontuações inválidas") }; return
+        }
 
-        val scoringSystem = runCatching { ScoringSystem(exact, cw, cwl, cd) }.getOrElse {
+        val scoringSystem = runCatching { ScoringSystem(exact, cw, cwl, cd, cwo) }.getOrElse {
             _state.update { it.copy(scoringError = "Pontos devem estar entre 0 e 999") }
             return
         }
@@ -70,7 +75,14 @@ class CreateGroupViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             createGroupUseCase(name, s.betMode, scoringSystem)
                 .onSuccess { group -> _state.update { it.copy(isLoading = false, created = group) } }
-                .onFailure { e -> _state.update { it.copy(isLoading = false, error = e.message) } }
+                .onFailure { e ->
+                    val msg = when {
+                        e.message?.contains("GroupLimitReached") == true ->
+                            "Você atingiu o limite de grupos. Seja VIP para criar mais grupos."
+                        else -> e.message ?: "Erro ao criar grupo"
+                    }
+                    _state.update { it.copy(isLoading = false, error = msg) }
+                }
         }
     }
 

@@ -5,10 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,12 +31,13 @@ fun GroupListScreen(
     viewModel: GroupListViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val showPaywall by viewModel.paywallVisible.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            icon = { Icon(Icons.Default.Logout, contentDescription = null) },
+            icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
             title = { Text("Sair da conta") },
             text = { Text("Tem certeza que deseja sair?") },
             confirmButton = {
@@ -49,16 +51,28 @@ fun GroupListScreen(
         )
     }
 
+    if (showPaywall) {
+        PaywallDialog(onDismiss = { viewModel.dismissPaywall() })
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Meus Grupos") },
                 actions = {
+                    if (state.isVip) {
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "VIP",
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                    }
                     IconButton(onClick = onNavigateToProfile) {
                         Icon(Icons.Default.Person, contentDescription = "Meu perfil")
                     }
                     IconButton(onClick = { showLogoutDialog = true }) {
-                        Icon(Icons.Default.Logout, contentDescription = "Sair da conta")
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Sair da conta")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,7 +91,7 @@ fun GroupListScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedButton(
-                        onClick = onNavigateToJoin,
+                        onClick = { viewModel.onJoinGroupClicked(onNavigateToJoin) },
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Default.VpnKey, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -85,7 +99,7 @@ fun GroupListScreen(
                         Text("Entrar com código")
                     }
                     Button(
-                        onClick = onNavigateToCreate,
+                        onClick = { viewModel.onCreateGroupClicked(onNavigateToCreate) },
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -113,6 +127,29 @@ fun GroupListScreen(
             }
         }
     }
+}
+
+@Composable
+private fun PaywallDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary) },
+        title = { Text("Limite de grupos atingido") },
+        text = {
+            Text(
+                "No plano gratuito você pode participar de apenas 1 grupo.\n\n" +
+                "Torne-se VIP por R\$10,00 (pagamento único) e participe de grupos ilimitados!"
+            )
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Em breve")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Fechar") }
+        }
+    )
 }
 
 @Composable

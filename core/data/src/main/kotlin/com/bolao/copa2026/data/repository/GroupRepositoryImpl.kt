@@ -23,14 +23,13 @@ class GroupRepositoryImpl @Inject constructor(
         betMode: BetMode,
         scoringSystem: ScoringSystem
     ): Result<Group> = runCatching {
-        val user = auth.currentUser ?: error("Not authenticated")
-        val uid = user.uid
-        
-        var displayName = user.displayName
-        if (displayName.isNullOrBlank()) {
-            val userDoc = authDataSource.getUserDocument(uid)
-            displayName = userDoc?.getString("displayName") ?: ""
-        }
+        val uid = auth.currentUser?.uid ?: error("Not authenticated")
+
+        val userDoc = authDataSource.getUserDocument(uid)
+        val isVip = userDoc?.getBoolean("isVip") ?: false
+        if (!isVip && groupDataSource.getUserGroupCount(uid) >= 1) throw AppError.GroupLimitReached
+
+        val displayName = userDoc?.getString("displayName") ?: auth.currentUser?.displayName ?: ""
         
         val groupId = UUID.randomUUID().toString()
         val doc = groupDataSource.createGroup(
@@ -47,12 +46,12 @@ class GroupRepositoryImpl @Inject constructor(
 
     override suspend fun joinGroup(inviteCode: String): Result<Group> = runCatching {
         val uid = auth.currentUser?.uid ?: error("Not authenticated")
-        
-        var displayName = auth.currentUser?.displayName
-        if (displayName.isNullOrBlank()) {
-            val userDoc = authDataSource.getUserDocument(uid)
-            displayName = userDoc?.getString("displayName") ?: ""
-        }
+
+        val userDoc = authDataSource.getUserDocument(uid)
+        val isVip = userDoc?.getBoolean("isVip") ?: false
+        if (!isVip && groupDataSource.getUserGroupCount(uid) >= 1) throw AppError.GroupLimitReached
+
+        val displayName = userDoc?.getString("displayName") ?: auth.currentUser?.displayName ?: ""
 
         val doc = groupDataSource.getGroupByInviteCode(inviteCode)
             ?: throw AppError.InvalidInviteCode
@@ -76,6 +75,10 @@ class GroupRepositoryImpl @Inject constructor(
         runCatching {
             groupDataSource.updateScoringSystem(groupId, scoringSystem.toMap())
         }
+
+    override suspend fun updateMemberDisplayNameInAllGroups(userId: String, newName: String): Result<Unit> = runCatching {
+        groupDataSource.updateMemberDisplayNameInAllGroups(userId, newName)
+    }
 
     private fun generateSimpleCode(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

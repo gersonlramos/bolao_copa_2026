@@ -8,7 +8,8 @@ data class ScoringSystem(
     val exactScore: Int,
     val correctWinnerAndWinnerGoals: Int,
     val correctWinnerAndLoserGoals: Int,
-    val correctDraw: Int
+    val correctDraw: Int,
+    val correctWinner: Int
 ) {
     init {
         require(exactScore in 0..999) {
@@ -22,6 +23,9 @@ data class ScoringSystem(
         }
         require(correctDraw in 0..999) {
             "correctDraw must be in 0..999, was $correctDraw"
+        }
+        require(correctWinner in 0..999) {
+            "correctWinner must be in 0..999, was $correctWinner"
         }
     }
 }

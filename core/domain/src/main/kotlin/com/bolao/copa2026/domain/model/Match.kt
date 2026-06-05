@@ -16,4 +16,4 @@ data class Match(
     val scoreAway: Int?
 )
 
-enum class MatchStatus { SCHEDULED, IN_PROGRESS, FINISHED }
+enum class MatchStatus { SCHEDULED, IN_PROGRESS, FINISHED, POSTPONED, CANCELLED, SUSPENDED }

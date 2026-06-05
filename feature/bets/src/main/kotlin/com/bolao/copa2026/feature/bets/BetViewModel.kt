@@ -7,6 +7,7 @@ import com.bolao.copa2026.domain.model.Bet
 import com.bolao.copa2026.domain.model.BetWithUser
 import com.bolao.copa2026.domain.model.Match
 import com.bolao.copa2026.domain.model.MatchStatus
+import com.bolao.copa2026.domain.repository.AuthRepository
 import com.bolao.copa2026.domain.repository.BetRepository
 import com.bolao.copa2026.domain.repository.MatchRepository
 import com.bolao.copa2026.domain.usecase.SaveBetUseCase
@@ -21,6 +22,7 @@ data class BetUiState(
     val awayGoalsInput: String = "",
     val existingBet: Bet? = null,
     val allBets: List<BetWithUser> = emptyList(),
+    val currentUserId: String = "",
     val isDeadlinePassed: Boolean = false,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -33,7 +35,8 @@ class BetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val matchRepository: MatchRepository,
     private val betRepository: BetRepository,
-    private val saveBetUseCase: SaveBetUseCase
+    private val saveBetUseCase: SaveBetUseCase,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val groupId: String = savedStateHandle["groupId"] ?: ""
@@ -43,6 +46,11 @@ class BetViewModel @Inject constructor(
     val uiState: StateFlow<BetUiState> = _state.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            authRepository.currentUser().collect { user ->
+                _state.update { it.copy(currentUserId = user?.id ?: "") }
+            }
+        }
         viewModelScope.launch {
             matchRepository.observeMatch(matchId).collect { match ->
                 val deadlinePassed = match.status != MatchStatus.SCHEDULED

@@ -1,7 +1,9 @@
 package com.bolao.copa2026.feature.bets
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -12,7 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.bolao.copa2026.domain.model.BetWithUser
 import com.bolao.copa2026.domain.model.MatchStatus
+import com.bolao.copa2026.ui.util.tlaToName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,9 +37,8 @@ fun BetScreen(
 
     LaunchedEffect(state.saved) {
         if (state.saved) {
-            isEditing = false
-            snackbarHostState.showSnackbar("Palpite salvo!")
             viewModel.clearSaved()
+            onBack()
         }
     }
 
@@ -43,7 +46,9 @@ fun BetScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(title = {
-                Text(state.match?.let { "${it.homeTeam} x ${it.awayTeam}" } ?: "Palpite")
+                Text(state.match?.let {
+                    "${tlaToName(it.homeTeamTla, it.homeTeam)} x ${tlaToName(it.awayTeamTla, it.awayTeam)}"
+                } ?: "Palpite")
             })
         }
     ) { padding ->
@@ -58,6 +63,7 @@ fun BetScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -85,9 +91,9 @@ fun BetScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(match.homeTeam, style = MaterialTheme.typography.titleMedium)
+                Text(tlaToName(match.homeTeamTla, match.homeTeam), style = MaterialTheme.typography.titleMedium)
                 Text("x", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(match.awayTeam, style = MaterialTheme.typography.titleMedium)
+                Text(tlaToName(match.awayTeamTla, match.awayTeam), style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(Modifier.height(32.dp))
@@ -198,6 +204,76 @@ fun BetScreen(
                     }
                 }
             }
+
+            // Group bets — visible only after deadline
+            if (state.isDeadlinePassed && state.allBets.isNotEmpty()) {
+                Spacer(Modifier.height(28.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Palpites do grupo",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(4.dp))
+                state.allBets.forEach { betWithUser ->
+                    GroupBetRow(
+                        betWithUser = betWithUser,
+                        isCurrentUser = betWithUser.userId == state.currentUserId,
+                        isFinished = match.status == MatchStatus.FINISHED
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun GroupBetRow(betWithUser: BetWithUser, isCurrentUser: Boolean, isFinished: Boolean) {
+    val nameLabel = when {
+        isCurrentUser && betWithUser.displayName.isNotBlank() -> "${betWithUser.displayName} (você)"
+        isCurrentUser -> "(você)"
+        betWithUser.displayName.isNotBlank() -> betWithUser.displayName
+        else -> "Participante"
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = nameLabel,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isCurrentUser) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (isCurrentUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        val bet = betWithUser.bet
+        if (bet != null) {
+            Text(
+                "${bet.homeGoals} × ${bet.awayGoals}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+            val score = bet.score
+            if (isFinished && score != null) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "+$score pts",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        } else {
+            Text(
+                "Sem palpite",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }

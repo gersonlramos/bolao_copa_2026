@@ -20,6 +20,7 @@ type ScoringCategory =
   | "CORRECT_WINNER_AND_WINNER_GOALS"
   | "CORRECT_WINNER_AND_LOSER_GOALS"
   | "CORRECT_DRAW"
+  | "CORRECT_WINNER"
   | "NO_SCORE";
 
 interface ScoringSystem {
@@ -27,6 +28,7 @@ interface ScoringSystem {
   correctWinnerAndWinnerGoals: number;
   correctWinnerAndLoserGoals: number;
   correctDraw: number;
+  correctWinner: number;
 }
 
 function winner(home: number, away: number): "HOME" | "AWAY" | "DRAW" {
@@ -61,7 +63,7 @@ function determineCategory(
   if (betWinner === "AWAY" && betHome === resultHome)
     candidates.push({ cat: "CORRECT_WINNER_AND_LOSER_GOALS", pts: system.correctWinnerAndLoserGoals });
 
-  if (candidates.length === 0) return "NO_SCORE";
+  if (candidates.length === 0) return "CORRECT_WINNER";
   return candidates.reduce((best, c) => (c.pts >= best.pts ? c : best)).cat;
 }
 
@@ -71,6 +73,7 @@ function calculatePoints(category: ScoringCategory, system: ScoringSystem): numb
     case "CORRECT_WINNER_AND_WINNER_GOALS": return system.correctWinnerAndWinnerGoals;
     case "CORRECT_WINNER_AND_LOSER_GOALS": return system.correctWinnerAndLoserGoals;
     case "CORRECT_DRAW": return system.correctDraw;
+    case "CORRECT_WINNER": return system.correctWinner;
     case "NO_SCORE": return 0;
   }
 }
@@ -124,7 +127,8 @@ export const calculateScores = onDocumentUpdated(
 
       const batch = db.batch();
 
-      // 3. Calculate score for each bet
+      // 3. Calculate score for each bet and accumulate per-user deltas
+      const memberDeltas = new Map<string, number>();
       for (const betDoc of betsSnap.docs) {
         const bet = betDoc.data();
         const category = determineCategory(
@@ -132,37 +136,48 @@ export const calculateScores = onDocumentUpdated(
           resultHome, resultAway,
           system
         );
-        const points = calculatePoints(category, system);
+        const newPoints = calculatePoints(category, system);
+        const oldPoints: number = bet.score ?? 0;
 
         batch.update(betDoc.ref, {
-          score: points,
+          score: newPoints,
           scoringCategory: category,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+
+        // Accumulate delta — avoids reading all group bets later
+        memberDeltas.set(
+          bet.userId as string,
+          (memberDeltas.get(bet.userId as string) ?? 0) + (newPoints - oldPoints)
+        );
       }
 
       await batch.commit();
 
-      // 4. Recalculate totalScore for each member in this group
+      // 4. Apply deltas with increment — no allBets read needed
       const membersSnap = await db.collection("groups").doc(groupDoc.id)
         .collection("members").get();
 
-      const allBetsSnap = await db.collection("bets")
-        .where("groupId", "==", groupDoc.id)
-        .get();
-
-      const memberTotals = new Map<string, number>();
-      for (const b of allBetsSnap.docs) {
-        const bd = b.data();
-        if (bd.score !== null && bd.score !== undefined) {
-          memberTotals.set(bd.userId, (memberTotals.get(bd.userId) ?? 0) + (bd.score as number));
-        }
+      // Sync displayName from users collection for members missing it
+      const missingNameIds = membersSnap.docs
+        .filter(d => !d.data().displayName)
+        .map(d => d.id);
+      const nameMap = new Map<string, string>();
+      for (const uid of missingNameIds) {
+        const userDoc = await db.collection("users").doc(uid).get();
+        const name = userDoc.data()?.displayName;
+        if (name) nameMap.set(uid, name);
       }
 
       const memberBatch = db.batch();
       for (const memberDoc of membersSnap.docs) {
-        const total = memberTotals.get(memberDoc.id) ?? 0;
-        memberBatch.update(memberDoc.ref, { totalScore: total });
+        const delta = memberDeltas.get(memberDoc.id) ?? 0;
+        const update: Record<string, unknown> = {
+          totalScore: admin.firestore.FieldValue.increment(delta),
+        };
+        const syncedName = nameMap.get(memberDoc.id);
+        if (syncedName) update.displayName = syncedName;
+        memberBatch.update(memberDoc.ref, update);
       }
       await memberBatch.commit();
     }

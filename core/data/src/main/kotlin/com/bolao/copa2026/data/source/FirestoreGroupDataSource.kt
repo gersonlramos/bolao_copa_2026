@@ -74,6 +74,13 @@ class FirestoreGroupDataSource @Inject constructor(
         }.await()
     }
 
+    suspend fun getUserGroupCount(userId: String): Int =
+        db.collection("groups")
+            .whereArrayContains("memberIds", userId)
+            .get()
+            .await()
+            .size()
+
     fun observeUserGroups(userId: String): Flow<List<DocumentSnapshot>> = callbackFlow {
         val registration = db.collection("groups")
             .whereArrayContains("memberIds", userId)
@@ -97,5 +104,19 @@ class FirestoreGroupDataSource @Inject constructor(
         db.collection("groups").document(groupId)
             .update("scoringSystem", scoringSystem)
             .await()
+    }
+
+    suspend fun updateMemberDisplayNameInAllGroups(userId: String, newName: String) {
+        val groups = db.collection("groups")
+            .whereArrayContains("memberIds", userId)
+            .get()
+            .await()
+
+        db.runBatch { batch ->
+            groups.documents.forEach { groupDoc ->
+                val memberRef = groupDoc.reference.collection("members").document(userId)
+                batch.update(memberRef, "displayName", newName)
+            }
+        }.await()
     }
 }

@@ -19,7 +19,7 @@ fun DocumentSnapshot.toMatch(): Match = Match(
     awayTeamTla = getString("awayTeamTla") ?: "",
     venue = getString("venue"),
     scheduledAt = getTimestamp("scheduledAt")?.toDate()?.toInstant() ?: Instant.EPOCH,
-    status = MatchStatus.valueOf(getString("status") ?: "SCHEDULED"),
+    status = runCatching { MatchStatus.valueOf(getString("status") ?: "SCHEDULED") }.getOrDefault(MatchStatus.SCHEDULED),
     scoreHome = getLong("scoreHome")?.toInt(),
     scoreAway = getLong("scoreAway")?.toInt()
 )
@@ -37,7 +37,8 @@ fun DocumentSnapshot.toGroup(): Group {
             exactScore = (ss["exactScore"] as? Long)?.toInt() ?: 0,
             correctWinnerAndWinnerGoals = (ss["correctWinnerAndWinnerGoals"] as? Long)?.toInt() ?: 0,
             correctWinnerAndLoserGoals = (ss["correctWinnerAndLoserGoals"] as? Long)?.toInt() ?: 0,
-            correctDraw = (ss["correctDraw"] as? Long)?.toInt() ?: 0
+            correctDraw = (ss["correctDraw"] as? Long)?.toInt() ?: 0,
+            correctWinner = (ss["correctWinner"] as? Long)?.toInt() ?: 0
         ),
         memberCount = getLong("memberCount")?.toInt() ?: 0,
         rankingStale = getBoolean("rankingStale") ?: false
@@ -67,5 +68,6 @@ fun ScoringSystem.toMap(): Map<String, Any> = mapOf(
     "exactScore" to exactScore,
     "correctWinnerAndWinnerGoals" to correctWinnerAndWinnerGoals,
     "correctWinnerAndLoserGoals" to correctWinnerAndLoserGoals,
-    "correctDraw" to correctDraw
+    "correctDraw" to correctDraw,
+    "correctWinner" to correctWinner
 )

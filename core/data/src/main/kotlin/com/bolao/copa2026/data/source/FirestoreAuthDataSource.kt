@@ -3,6 +3,9 @@ package com.bolao.copa2026.data.source
 import com.bolao.copa2026.data.dto.LoginAttemptsDto
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
 import javax.inject.Inject
@@ -12,6 +15,15 @@ class FirestoreAuthDataSource @Inject constructor(
 ) {
     suspend fun getUserDocument(userId: String): DocumentSnapshot? =
         db.collection("users").document(userId).get().await()
+
+    fun observeUserDocument(userId: String): Flow<DocumentSnapshot?> = callbackFlow {
+        val reg = db.collection("users").document(userId)
+            .addSnapshotListener { snap, err ->
+                if (err != null) { close(err); return@addSnapshotListener }
+                trySend(snap)
+            }
+        awaitClose { reg.remove() }
+    }
 
     suspend fun saveUserDocument(userId: String, displayName: String, email: String) {
         db.collection("users").document(userId).set(

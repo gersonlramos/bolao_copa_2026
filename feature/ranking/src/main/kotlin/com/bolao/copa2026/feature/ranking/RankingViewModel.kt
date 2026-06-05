@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bolao.copa2026.domain.model.RankingEntry
 import com.bolao.copa2026.domain.repository.AuthRepository
+import com.bolao.copa2026.domain.repository.GroupRepository
 import com.bolao.copa2026.domain.usecase.GetRankingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class RankingUiState(
@@ -22,13 +24,24 @@ data class RankingUiState(
 class RankingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getRankingUseCase: GetRankingUseCase,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val groupRepository: GroupRepository
 ) : ViewModel() {
 
     private val groupId: String = savedStateHandle["groupId"] ?: ""
 
     val uiState: StateFlow<RankingUiState> = getRankingUseCase(groupId)
         .combine(authRepository.currentUser()) { entries, user ->
+            // Auto-fix empty display names for current user
+            if (user != null) {
+                val myEntry = entries.firstOrNull { it.userId == user.id }
+                if (myEntry != null && myEntry.displayName.isBlank() && user.displayName.isNotBlank()) {
+                    viewModelScope.launch {
+                        groupRepository.updateMemberDisplayNameInAllGroups(user.id, user.displayName)
+                    }
+                }
+            }
+
             RankingUiState(
                 entries = entries,
                 currentUserId = user?.id ?: "",

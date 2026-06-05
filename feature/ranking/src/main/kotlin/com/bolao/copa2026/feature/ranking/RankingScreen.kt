@@ -109,8 +109,14 @@ private fun RankingRow(entry: RankingEntry, isCurrentUser: Boolean) {
         }
 
         // Name
+        val nameLabel = when {
+            isCurrentUser && entry.displayName.isNotBlank() -> "${entry.displayName} (você)"
+            isCurrentUser -> "(você)"
+            entry.displayName.isNotBlank() -> entry.displayName
+            else -> "Usuário #${entry.userId.takeLast(4)}"
+        }
         Text(
-            text = if (isCurrentUser) "${entry.displayName} (você)" else entry.displayName,
+            text = nameLabel,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = if (isCurrentUser || isTopThree) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(1f),

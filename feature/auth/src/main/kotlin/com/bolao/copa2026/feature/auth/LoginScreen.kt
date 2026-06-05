@@ -2,8 +2,6 @@ package com.bolao.copa2026.feature.auth
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,11 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -29,14 +23,10 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.bolao.copa2026.feature.auth.R
 import com.bolao.copa2026.ui.theme.BolaoTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
-
-private val Gold = Color(0xFFFFB700)
-private val OverlayColor = Color(0xFF000000).copy(alpha = 0.62f)
 
 @Composable
 fun LoginScreen(
@@ -123,91 +113,62 @@ fun LoginContent(
     onNavigateToRegister: () -> Unit = {},
     onNavigateToForgotPassword: () -> Unit = {}
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background image
-        Image(
-            painter = painterResource(id = R.drawable.login_background),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        // Dark overlay
-        Box(modifier = Modifier.fillMaxSize().background(OverlayColor))
-
-        // Form content
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .systemBarsPadding()
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // App title
-            Text(
-                "Bolão",
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
-                color = Gold
-            )
-            Text(
-                "Copa 2026",
-                style = MaterialTheme.typography.headlineSmall,
-                color = Color.White.copy(alpha = 0.9f)
-            )
+            Text("Login", style = MaterialTheme.typography.headlineMedium)
+            Spacer(Modifier.height(32.dp))
 
-            Spacer(Modifier.height(48.dp))
-
-            // E-mail
             Text(
                 "E-mail",
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = state.email,
                 onValueChange = onEmailChange,
-                placeholder = { Text("seu@email.com", color = Color.White.copy(alpha = 0.4f)) },
+                placeholder = { Text("seu@email.com") },
                 isError = state.emailError != null,
-                supportingText = { state.emailError?.let { Text(it, color = Color(0xFFFF6B6B)) } },
+                supportingText = { state.emailError?.let { Text(it) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = darkFieldColors(isError = state.emailError != null)
+                singleLine = true
             )
             Spacer(Modifier.height(12.dp))
 
-            // Senha
             var passwordVisible by remember { mutableStateOf(false) }
             Text(
                 "Senha",
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = state.password,
                 onValueChange = onPasswordChange,
-                placeholder = { Text("••••••••", color = Color.White.copy(alpha = 0.4f)) },
+                placeholder = { Text("••••••••") },
                 isError = state.passwordError != null,
-                supportingText = { state.passwordError?.let { Text(it, color = Color(0xFFFF6B6B)) } },
+                supportingText = { state.passwordError?.let { Text(it) } },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.7f)
+                            contentDescription = if (passwordVisible) "Ocultar senha" else "Mostrar senha"
                         )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = darkFieldColors(isError = state.passwordError != null)
+                singleLine = true
             )
 
             TextButton(
@@ -218,26 +179,26 @@ fun LoginContent(
                 Text(
                     "Esqueci minha senha",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Gold
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
             state.blockMessage?.let { msg ->
                 Spacer(Modifier.height(4.dp))
-                Text(msg, color = Color(0xFFFF6B6B), style = MaterialTheme.typography.bodySmall)
+                Text(msg, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
             Spacer(Modifier.height(16.dp))
 
             Button(
                 onClick = onLogin,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Entrar", fontWeight = FontWeight.SemiBold)
+                    Text("Entrar")
                 }
             }
 
@@ -245,10 +206,8 @@ fun LoginContent(
 
             OutlinedButton(
                 onClick = onGoogleLogin,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                enabled = !state.isLoading,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isLoading
             ) {
                 Text("Entrar com Google")
             }
@@ -256,33 +215,11 @@ fun LoginContent(
             Spacer(Modifier.height(16.dp))
 
             TextButton(onClick = onNavigateToRegister) {
-                Text("Não tenho conta — Cadastrar", color = Color.White.copy(alpha = 0.8f))
+                Text("Não tenho conta — Cadastrar")
             }
         }
-
-        // Snackbar at bottom
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .systemBarsPadding()
-        )
     }
 }
-
-@Composable
-private fun darkFieldColors(isError: Boolean = false) = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.8f),
-    unfocusedBorderColor = if (isError) Color(0xFFFF6B6B) else Color.White.copy(alpha = 0.4f),
-    cursorColor = Color.White,
-    focusedContainerColor = Color.White.copy(alpha = 0.08f),
-    unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
-    errorBorderColor = Color(0xFFFF6B6B),
-    errorTextColor = Color.White,
-    errorContainerColor = Color.White.copy(alpha = 0.08f)
-)
 
 @Preview(showBackground = true, name = "Login vazio")
 @Composable

@@ -12,9 +12,13 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
 import javax.inject.Inject
@@ -117,13 +121,23 @@ class AuthRepositoryImpl @Inject constructor(
         return user.providerData.any { it.providerId == EmailAuthProvider.PROVIDER_ID }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun currentUser(): Flow<User?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { fa ->
-            val u = fa.currentUser
-            trySend(u?.let { User(it.uid, it.displayName ?: "", it.email ?: "") })
+            trySend(fa.currentUser?.uid)
         }
         auth.addAuthStateListener(listener)
         awaitClose { auth.removeAuthStateListener(listener) }
+    }.flatMapLatest { uid ->
+        if (uid == null) flowOf(null)
+        else authDataSource.observeUserDocument(uid).map { snap ->
+            User(
+                id = uid,
+                displayName = snap?.getString("displayName") ?: auth.currentUser?.displayName ?: "",
+                email = snap?.getString("email") ?: auth.currentUser?.email ?: "",
+                isVip = snap?.getBoolean("isVip") ?: false
+            )
+        }
     }
 
     override suspend fun checkLoginBlock(email: String): LoginBlockStatus {

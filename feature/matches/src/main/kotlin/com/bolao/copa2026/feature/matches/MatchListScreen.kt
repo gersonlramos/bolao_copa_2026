@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
@@ -12,6 +13,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -20,6 +23,7 @@ import com.bolao.copa2026.domain.model.Match
 import com.bolao.copa2026.domain.model.MatchStatus
 import com.bolao.copa2026.ui.theme.BolaoTheme
 import com.bolao.copa2026.ui.util.tlaToFlag
+import com.bolao.copa2026.ui.util.tlaToName
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -27,6 +31,22 @@ import java.time.format.DateTimeFormatter
 private val BRT = ZoneId.of("America/Sao_Paulo")
 private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM").withZone(BRT)
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm").withZone(BRT)
+
+private val ChipShape = RoundedCornerShape(50)
+
+// Status chip colors
+private val ColorScheduledBg   = Color(0xFFEEEEEE)
+private val ColorScheduledText = Color(0xFF757575)
+private val ColorActiveBg      = Color(0xFFE8F5E9)
+private val ColorActiveText    = Color(0xFF2E7D32)
+private val ColorFinishedBg    = Color(0xFFE3F2FD)
+private val ColorFinishedText  = Color(0xFF1565C0)
+private val ColorAlertBg       = Color(0xFFFFEBEE)
+private val ColorAlertText     = Color(0xFFC62828)
+
+// Bet chip colors
+private val ColorBetBg   = Color(0xFF006B3C)
+private val ColorBetText = Color.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,18 +90,20 @@ fun MatchListScreen(
 private fun MatchItem(match: Match, userBet: Bet?, onClick: () -> Unit) {
     val homeFlag = tlaToFlag(match.homeTeamTla)
     val awayFlag = tlaToFlag(match.awayTeamTla)
+    val homeName = tlaToName(match.homeTeamTla, match.homeTeam)
+    val awayName = tlaToName(match.awayTeamTla, match.awayTeam)
     val date = dateFormatter.format(match.scheduledAt)
     val time = timeFormatter.format(match.scheduledAt)
 
     ListItem(
         headlineContent = {
             Text(
-                "$homeFlag ${match.homeTeam}  ×  ${match.awayTeam} $awayFlag",
+                "$homeFlag $homeName  ×  $awayName $awayFlag",
                 style = MaterialTheme.typography.titleMedium
             )
         },
         supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     "$date • $time (BRT)",
                     style = MaterialTheme.typography.bodySmall,
@@ -94,23 +116,25 @@ private fun MatchItem(match: Match, userBet: Bet?, onClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    StatusLabel(match.status)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    StatusChip(match.status)
                     if (match.status == MatchStatus.FINISHED) {
-                        Spacer(Modifier.width(8.dp))
                         Text(
                             "${match.scoreHome} – ${match.scoreAway}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorFinishedText
                         )
                     }
                     userBet?.let { bet ->
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "· Palpite: ${bet.homeGoals} x ${bet.awayGoals}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        val label = if (match.status == MatchStatus.FINISHED && bet.score != null)
+                            "${bet.homeGoals} x ${bet.awayGoals}  •  +${bet.score} pts"
+                        else
+                            "${bet.homeGoals} x ${bet.awayGoals}"
+                        BetChip(label)
                     }
                 }
             }
@@ -137,13 +161,36 @@ private fun MatchItem(match: Match, userBet: Bet?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun StatusLabel(status: MatchStatus) {
-    val (label, color) = when (status) {
-        MatchStatus.SCHEDULED -> "Aguardando" to MaterialTheme.colorScheme.outline
-        MatchStatus.IN_PROGRESS -> "Em andamento" to MaterialTheme.colorScheme.primary
-        MatchStatus.FINISHED -> "Encerrado" to MaterialTheme.colorScheme.secondary
+private fun StatusChip(status: MatchStatus) {
+    val (label, bg, fg) = when (status) {
+        MatchStatus.SCHEDULED  -> Triple("Aguardando",   ColorScheduledBg, ColorScheduledText)
+        MatchStatus.IN_PROGRESS -> Triple("Em andamento", ColorActiveBg,    ColorActiveText)
+        MatchStatus.FINISHED   -> Triple("Encerrado",    ColorFinishedBg,  ColorFinishedText)
+        MatchStatus.POSTPONED  -> Triple("Adiado",       ColorAlertBg,     ColorAlertText)
+        MatchStatus.CANCELLED  -> Triple("Cancelado",    ColorAlertBg,     ColorAlertText)
+        MatchStatus.SUSPENDED  -> Triple("Interrompido", ColorAlertBg,     ColorAlertText)
     }
-    Text(label, style = MaterialTheme.typography.labelSmall, color = color)
+    Surface(shape = ChipShape, color = bg) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = fg,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+        )
+    }
+}
+
+@Composable
+private fun BetChip(score: String) {
+    Surface(shape = ChipShape, color = ColorBetBg) {
+        Text(
+            "Palpite: $score",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = ColorBetText,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+        )
+    }
 }
 
 private fun fakeMatch(
@@ -154,18 +201,25 @@ private fun fakeMatch(
 @Preview(showBackground = true, name = "Lista de Partidas")
 @Composable
 private fun MatchListPreview() {
+    val fakeBet = Bet("b1", "u1", "3", 2, 1, 7, null, Instant.now(), Instant.now())
     val matches = listOf(
-        fakeMatch("1", "Brasil", "BRA", "México", "MEX", "SoFi Stadium", MatchStatus.SCHEDULED),
+        fakeMatch("1", "Brasil", "BRA", "Marrocos", "MAR", "SoFi Stadium", MatchStatus.SCHEDULED),
         fakeMatch("2", "Argentina", "ARG", "França", "FRA", "MetLife Stadium", MatchStatus.IN_PROGRESS),
         fakeMatch("3", "Alemanha", "GER", "Espanha", "ESP", "Allegiant Stadium", MatchStatus.FINISHED, 2, 1),
-        fakeMatch("4", "Portugal", "POR", "Itália", "ITA", null, MatchStatus.SCHEDULED),
-        fakeMatch("5", "EUA", "USA", "Japão", "JPN", "Rose Bowl", MatchStatus.FINISHED, 0, 0),
+        fakeMatch("4", "Portugal", "POR", "Itália", "ITA", null, MatchStatus.POSTPONED),
+        fakeMatch("5", "EUA", "USA", "Japão", "JPN", "Rose Bowl", MatchStatus.CANCELLED),
     )
     BolaoTheme {
         @OptIn(ExperimentalMaterial3Api::class)
         Scaffold(topBar = { TopAppBar(title = { Text("Partidas") }) }) { padding ->
             LazyColumn(Modifier.padding(padding)) {
-                items(matches) { MatchItem(it, null, onClick = {}) }
+                items(matches) { match ->
+                    MatchItem(
+                        match = match,
+                        userBet = if (match.id == "1") fakeBet else null,
+                        onClick = {}
+                    )
+                }
             }
         }
     }
