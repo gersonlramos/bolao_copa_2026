@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolão Copa 2026</title>
+  <style>
+    :root {
+      --green: #1b5e20;
+      --green-mid: #2e7d32;
+      --green-light: #4caf50;
+      --green-bg: #f1f8e9;
+      --gold: #f9a825;
+      --text: #1a1a1a;
+      --muted: #555;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; color: var(--text); background: #fff; }
+
+    /* NAV */
+    nav {
+      background: var(--green);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav .logo { color: #fff; font-size: 1.3rem; font-weight: 700; text-decoration: none; }
+    nav a { color: rgba(255,255,255,.85); text-decoration: none; font-size: .95rem; margin-left: 24px; }
+    nav a:hover { color: #fff; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-mid) 100%);
+      color: #fff;
+      padding: 80px 24px 64px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 16px; line-height: 1.15; }
+    .hero p { font-size: 1.2rem; opacity: .9; max-width: 540px; margin: 0 auto 40px; line-height: 1.6; }
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      color: var(--green);
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.3); }
+    .btn-download svg { width: 24px; height: 24px; }
+    .download-count {
+      margin-top: 16px;
+      font-size: .95rem;
+      opacity: .75;
+    }
+    .download-count span { font-weight: 700; opacity: 1; }
+
+    /* SCREENSHOTS */
+    .screenshots {
+      padding: 72px 24px;
+      background: var(--green-bg);
+      text-align: center;
+    }
+    .screenshots h2 { font-size: 2rem; color: var(--green); margin-bottom: 40px; }
+    .screenshots-grid {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .screenshots-grid img {
+      width: 180px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.15);
+    }
+    .screenshots-grid figcaption {
+      margin-top: 8px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    /* FEATURES */
+    .features { padding: 72px 24px; text-align: center; }
+    .features h2 { font-size: 2rem; color: var(--green); margin-bottom: 48px; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 28px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--green-bg);
+      border-radius: 16px;
+      padding: 28px 20px;
+      text-align: left;
+    }
+    .feature-card .icon { font-size: 2rem; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+    .feature-card p { font-size: .9rem; color: var(--muted); line-height: 1.5; }
+
+    /* PRICING */
+    .pricing {
+      background: var(--green);
+      color: #fff;
+      padding: 72px 24px;
+      text-align: center;
+    }
+    .pricing h2 { font-size: 2rem; margin-bottom: 12px; }
+    .pricing .subtitle { opacity: .85; max-width: 480px; margin: 0 auto 48px; line-height: 1.6; }
+    .plans {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .plan {
+      background: rgba(255,255,255,.1);
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 280px;
+      text-align: left;
+    }
+    .plan.vip {
+      background: rgba(255,255,255,.15);
+      border-color: var(--gold);
+    }
+    .plan .badge {
+      display: inline-block;
+      background: var(--gold);
+      color: #000;
+      font-size: .75rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .plan h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+    .plan .price { font-size: 2.2rem; font-weight: 800; margin-bottom: 4px; }
+    .plan .price-note { font-size: .85rem; opacity: .75; margin-bottom: 24px; }
+    .plan ul { list-style: none; }
+    .plan ul li { padding: 6px 0; font-size: .95rem; opacity: .9; }
+    .plan ul li::before { content: "✓  "; font-weight: 700; color: var(--gold); }
+    .plan .btn-pix {
+      display: block;
+      margin-top: 28px;
+      background: var(--gold);
+      color: #000;
+      text-align: center;
+      padding: 14px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .plan .btn-pix:hover { opacity: .85; }
+
+    /* PIX INSTRUCTIONS */
+    .pix-info {
+      background: #fff;
+      padding: 56px 24px;
+      text-align: center;
+    }
+    .pix-info h2 { font-size: 1.8rem; color: var(--green); margin-bottom: 16px; }
+    .pix-info p { color: var(--muted); line-height: 1.7; max-width: 560px; margin: 0 auto 12px; }
+    .pix-key {
+      display: inline-block;
+      background: var(--green-bg);
+      border: 2px dashed var(--green-light);
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      margin: 20px 0;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .pix-key:hover { background: #dcedc8; }
+    .pix-steps {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 740px;
+      margin: 32px auto 0;
+    }
+    .pix-step {
+      background: var(--green-bg);
+      border-radius: 16px;
+      padding: 20px;
+      width: 200px;
+      text-align: center;
+    }
+    .pix-step .num {
+      width: 36px; height: 36px;
+      background: var(--green);
+      color: #fff;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .pix-step p { font-size: .88rem; color: var(--muted); line-height: 1.5; }
+    .copy-msg { font-size: .85rem; color: var(--green-light); margin-top: 8px; min-height: 20px; }
+
+    /* FOOTER */
+    footer {
+      background: var(--green);
+      color: rgba(255,255,255,.7);
+      text-align: center;
+      padding: 28px 16px;
+      font-size: .9rem;
+    }
+    footer a { color: rgba(255,255,255,.9); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2rem; }
+      nav .links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">⚽ Bolão Copa 2026</a>
+  <div class="links">
+    <a href="#funcionalidades">Funcionalidades</a>
+    <a href="#vip">VIP</a>
+    <a href="#download">Baixar</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="download">
+  <h1>Seu bolão da<br>Copa do Mundo 2026</h1>
+  <p>Crie grupos com amigos, faça seus palpites e dispute no ranking — tudo em tempo real.</p>
+  <a href="https://github.com/gersonlramos/bolao_copa_2026/releases/latest/download/bolao-copa-2026.apk"
+     class="btn-download" id="btn-download" onclick="countDownload()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+    </svg>
+    Baixar para Android
+  </a>
+  <p class="download-count">
+    <span id="count">—</span> downloads realizados
+  </p>
+</section>
+
+<!-- SCREENSHOTS -->
+<section class="screenshots">
+  <h2>Conheça o app</h2>
+  <div class="screenshots-grid">
+    <figure>
+      <img src="https://raw.githubusercontent.com/gersonlramos/bolao_copa_2026/main/app/src/main/assets/1000239547.jpg" alt="Login" loading="lazy"/>
+      <figcaption>Login</figcaption>
+    </figure>
+    <figure>
+      <img src="https://raw.githubusercontent.com/gersonlramos/bolao_copa_2026/main/app/src/main/assets/1000239551.jpg" alt="Grupos" loading="lazy"/>
+      <figcaption>Grupos</figcaption>
+    </figure>
+    <figure>
+      <img src="https://raw.githubusercontent.com/gersonlramos/bolao_copa_2026/main/app/src/main/assets/1000239548.jpg" alt="Partidas" loading="lazy"/>
+      <figcaption>Partidas</figcaption>
+    </figure>
+    <figure>
+      <img src="https://raw.githubusercontent.com/gersonlramos/bolao_copa_2026/main/app/src/main/assets/1000239549.jpg" alt="Palpite" loading="lazy"/>
+      <figcaption>Palpite</figcaption>
+    </figure>
+    <figure>
+      <img src="https://raw.githubusercontent.com/gersonlramos/bolao_copa_2026/main/app/src/main/assets/1000239550.jpg" alt="Ranking" loading="lazy"/>
+      <figcaption>Ranking</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="funcionalidades">
+  <h2>Funcionalidades</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="icon">🏆</div>
+      <h3>Ranking em tempo real</h3>
+      <p>A pontuação é calculada automaticamente assim que cada jogo termina.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">👥</div>
+      <h3>Grupos com amigos</h3>
+      <p>Crie seu grupo e compartilhe o código de convite — em segundos todos estão dentro.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚽</div>
+      <h3>Palpites por partida</h3>
+      <p>Aposte o placar antes do prazo. Após o fechamento, veja o que os outros apostaram.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎯</div>
+      <h3>Pontuação personalizada</h3>
+      <p>Cada grupo define seus próprios pontos por acerto exato, vencedor, empate e mais.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔐</div>
+      <h3>Login seguro</h3>
+      <p>Autenticação com e-mail/senha ou conta Google.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Partidas da Copa 2026</h3>
+      <p>Todas as partidas da Copa do Mundo 2026 atualizadas automaticamente.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="vip">
+  <h2>Planos</h2>
+  <p class="subtitle">Comece de graça. Atualize para VIP se quiser participar de mais grupos.</p>
+  <div class="plans">
+    <div class="plan">
+      <h3>Grátis</h3>
+      <div class="price">R$ 0</div>
+      <div class="price-note">para sempre</div>
+      <ul>
+        <li>1 grupo</li>
+        <li>Palpites ilimitados</li>
+        <li>Ranking em tempo real</li>
+        <li>Login com Google</li>
+      </ul>
+    </div>
+    <div class="plan vip">
+      <div class="badge">⭐ VIP</div>
+      <h3>VIP</h3>
+      <div class="price">R$ 10</div>
+      <div class="price-note">pagamento único via Pix</div>
+      <ul>
+        <li>Grupos ilimitados</li>
+        <li>Palpites ilimitados</li>
+        <li>Ranking em tempo real</li>
+        <li>Login com Google</li>
+        <li>Suporte prioritário</li>
+      </ul>
+      <a href="#como-virar-vip" class="btn-pix">Quero ser VIP →</a>
+    </div>
+  </div>
+</section>
+
+<!-- PIX INSTRUCTIONS -->
+<section class="pix-info" id="como-virar-vip">
+  <h2>Como virar VIP</h2>
+  <p>É simples: faça um Pix de <strong>R$ 10,00</strong> para a chave abaixo e envie o comprovante por e-mail informando o <strong>e-mail de cadastro no app</strong>. Em até 24h você recebe a confirmação.</p>
+
+  <div class="pix-key" onclick="copyPix()" title="Clique para copiar">
+    gersonlopesr@gmail.com
+  </div>
+  <p class="copy-msg" id="copy-msg"></p>
+
+  <div class="pix-steps">
+    <div class="pix-step">
+      <div class="num">1</div>
+      <p>Abra o app do seu banco e selecione <strong>Pix</strong></p>
+    </div>
+    <div class="pix-step">
+      <div class="num">2</div>
+      <p>Use a chave <strong>gersonlopesr@gmail.com</strong> e pague R$ 10,00</p>
+    </div>
+    <div class="pix-step">
+      <div class="num">3</div>
+      <p>Envie o comprovante para <strong>gersonlopesr@gmail.com</strong> com seu e-mail do app</p>
+    </div>
+    <div class="pix-step">
+      <div class="num">4</div>
+      <p>Receba o acesso VIP em até <strong>24 horas</strong> 🎉</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Bolão Copa 2026 &nbsp;·&nbsp; Contato: <a href="mailto:gersonlopesr@gmail.com">gersonlopesr@gmail.com</a></p>
+  <p style="margin-top:8px; font-size:.8rem;">Disponível para Android · Desenvolvido no Brasil 🇧🇷</p>
+</footer>
+
+<!-- Firebase JS SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBolaoApp-REPLACE-WITH-YOUR-KEY",
+    authDomain: "bolao-copa-2026-4dfc5.firebaseapp.com",
+    projectId: "bolao-copa-2026-4dfc5",
+    storageBucket: "bolao-copa-2026-4dfc5.appspot.com",
+    messagingSenderId: "REPLACE",
+    appId: "REPLACE"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const statsRef = db.collection('config').doc('stats');
+
+  // Load download count
+  statsRef.get().then(doc => {
+    const count = doc.exists ? (doc.data().downloadCount || 0) : 0;
+    document.getElementById('count').textContent = count.toLocaleString('pt-BR');
+  }).catch(() => {
+    document.getElementById('count').textContent = '—';
+  });
+
+  function countDownload() {
+    statsRef.set({ downloadCount: firebase.firestore.FieldValue.increment(1) }, { merge: true })
+      .catch(() => {});
+  }
+
+  function copyPix() {
+    navigator.clipboard.writeText('gersonlopesr@gmail.com').then(() => {
+      const msg = document.getElementById('copy-msg');
+      msg.textContent = '✓ Chave copiada!';
+      setTimeout(() => msg.textContent = '', 3000);
+    });
+  }
+</script>
+</body>
+</html>

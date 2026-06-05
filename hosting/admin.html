@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Bolão Copa 2026</title>
+  <style>
+    :root { --green: #1b5e20; --green-light: #4caf50; --gold: #f9a825; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.1);
+    }
+    .logo { color: var(--green); font-size: 1.4rem; font-weight: 800; text-align: center; margin-bottom: 8px; }
+    .subtitle { color: #888; text-align: center; font-size: .9rem; margin-bottom: 32px; }
+
+    /* Login */
+    #login-section { text-align: center; }
+    .btn-google {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid #ddd;
+      border-radius: 50px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+      color: #333;
+      transition: border-color .15s, box-shadow .15s;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-google:hover { border-color: var(--green); box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+    .btn-google img { width: 22px; }
+    .access-denied {
+      color: #c62828;
+      background: #ffebee;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: .9rem;
+      text-align: center;
+      margin-top: 16px;
+      display: none;
+    }
+
+    /* Admin panel */
+    #admin-section { display: none; }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .user-info img { width: 40px; height: 40px; border-radius: 50%; }
+    .user-info .name { font-weight: 600; font-size: .95rem; }
+    .user-info .email { font-size: .8rem; color: #888; }
+    .user-info .logout {
+      margin-left: auto;
+      font-size: .8rem;
+      color: #888;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; color: var(--green); }
+    input[type="email"] {
+      width: 100%;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="email"]:focus { border-color: var(--green); }
+    .btn-grant {
+      width: 100%;
+      margin-top: 16px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-grant:hover { background: #2e7d32; }
+    .btn-grant:disabled { background: #aaa; cursor: not-allowed; }
+
+    .result {
+      margin-top: 16px;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: .9rem;
+      text-align: center;
+      display: none;
+    }
+    .result.success { background: #e8f5e9; color: #2e7d32; }
+    .result.error { background: #ffebee; color: #c62828; }
+
+    /* Stats */
+    .stats {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+    .stats h3 { font-size: .85rem; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .stats .number { font-size: 2.4rem; font-weight: 800; color: var(--green); }
+    .stats .label { font-size: .85rem; color: #888; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">⚽ Bolão Copa 2026</div>
+  <p class="subtitle">Painel administrativo</p>
+
+  <!-- LOGIN -->
+  <div id="login-section">
+    <button class="btn-google" onclick="signInGoogle()">
+      <img src="https://www.google.com/favicon.ico" alt="Google"/>
+      Entrar com Google
+    </button>
+    <div class="access-denied" id="access-denied">
+      Acesso negado. Somente o administrador pode acessar este painel.
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="admin-section">
+    <div class="user-info">
+      <img id="user-photo" src="" alt=""/>
+      <div>
+        <div class="name" id="user-name"></div>
+        <div class="email" id="user-email"></div>
+      </div>
+      <span class="logout" onclick="signOut()">Sair</span>
+    </div>
+
+    <label for="vip-email">E-mail do usuário para liberar VIP</label>
+    <input type="email" id="vip-email" placeholder="usuario@email.com" />
+    <button class="btn-grant" id="btn-grant" onclick="grantVip()">
+      ⭐ Liberar VIP
+    </button>
+    <div class="result" id="result"></div>
+
+    <div class="stats">
+      <h3>Downloads totais</h3>
+      <div class="number" id="dl-count">—</div>
+      <div class="label">desde o lançamento</div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+<script>
+  const ADMIN_EMAIL = 'gersonlopesr@gmail.com';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBolaoApp-REPLACE-WITH-YOUR-KEY",
+    authDomain: "bolao-copa-2026-4dfc5.firebaseapp.com",
+    projectId: "bolao-copa-2026-4dfc5",
+    storageBucket: "bolao-copa-2026-4dfc5.appspot.com",
+    messagingSenderId: "REPLACE",
+    appId: "REPLACE"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const functions = firebase.functions('southamerica-east1');
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      showLogin();
+      return;
+    }
+    if (user.email !== ADMIN_EMAIL) {
+      auth.signOut();
+      document.getElementById('access-denied').style.display = 'block';
+      return;
+    }
+    showAdmin(user);
+  });
+
+  function showLogin() {
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('admin-section').style.display = 'none';
+  }
+
+  function showAdmin(user) {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('admin-section').style.display = 'block';
+    document.getElementById('user-photo').src = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName || '';
+    document.getElementById('user-email').textContent = user.email;
+
+    db.collection('config').doc('stats').get().then(doc => {
+      const count = doc.exists ? (doc.data().downloadCount || 0) : 0;
+      document.getElementById('dl-count').textContent = count.toLocaleString('pt-BR');
+    });
+  }
+
+  function signInGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
+  }
+
+  function signOut() {
+    auth.signOut();
+  }
+
+  async function grantVip() {
+    const email = document.getElementById('vip-email').value.trim();
+    if (!email) return;
+
+    const btn = document.getElementById('btn-grant');
+    const result = document.getElementById('result');
+    btn.disabled = true;
+    btn.textContent = 'Aguarde...';
+    result.style.display = 'none';
+
+    try {
+      const grantVipFn = functions.httpsCallable('grantVip');
+      await grantVipFn({ userEmail: email });
+      result.className = 'result success';
+      result.textContent = `✓ VIP liberado para ${email}`;
+      document.getElementById('vip-email').value = '';
+    } catch (e) {
+      result.className = 'result error';
+      result.textContent = `Erro: ${e.message}`;
+    } finally {
+      result.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '⭐ Liberar VIP';
+    }
+  }
+</script>
+</body>
+</html>
