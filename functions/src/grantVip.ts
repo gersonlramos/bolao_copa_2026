@@ -1,20 +1,19 @@
 import * as functions from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 
-const ADMIN_EMAIL = "gersonlopesr@gmail.com";
-
 export const grantVip = functions.onCall(
   { region: "southamerica-east1" },
   async (request) => {
-    // Only the admin can call this
-    if (!request.auth) {
-      throw new functions.HttpsError("unauthenticated", "Não autenticado.");
-    }
-    if (request.auth.token.email !== ADMIN_EMAIL) {
-      throw new functions.HttpsError("permission-denied", "Acesso negado.");
+    const { adminKey, userEmail } = request.data as {
+      adminKey?: string;
+      userEmail?: string;
+    };
+
+    const validKey = process.env.ADMIN_KEY;
+    if (!adminKey || !validKey || adminKey !== validKey) {
+      throw new functions.HttpsError("permission-denied", "Código de acesso inválido.");
     }
 
-    const { userEmail } = request.data as { userEmail?: string };
     if (!userEmail) {
       throw new functions.HttpsError("invalid-argument", "userEmail é obrigatório.");
     }

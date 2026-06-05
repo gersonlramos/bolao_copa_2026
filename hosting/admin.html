@@ -10,11 +10,7 @@
         --green-light: #4caf50;
         --gold: #f9a825;
       }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
         font-family: "Segoe UI", sans-serif;
         background: #f4f6f8;
@@ -46,88 +42,15 @@
         font-size: 0.9rem;
         margin-bottom: 32px;
       }
-
-      /* Login */
-      #login-section {
-        text-align: center;
-      }
-      .btn-google {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        border: 2px solid #ddd;
-        border-radius: 50px;
-        padding: 14px 28px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        background: #fff;
-        color: #333;
-        transition:
-          border-color 0.15s,
-          box-shadow 0.15s;
-        width: 100%;
-        justify-content: center;
-      }
-      .btn-google:hover {
-        border-color: var(--green);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-      }
-      .btn-google img {
-        width: 22px;
-      }
-      .access-denied {
-        color: #c62828;
-        background: #ffebee;
-        border-radius: 10px;
-        padding: 14px;
-        font-size: 0.9rem;
-        text-align: center;
-        margin-top: 16px;
-        display: none;
-      }
-
-      /* Admin panel */
-      #admin-section {
-        display: none;
-      }
-      .user-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 28px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #eee;
-      }
-      .user-info img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-      }
-      .user-info .name {
-        font-weight: 600;
-        font-size: 0.95rem;
-      }
-      .user-info .email {
-        font-size: 0.8rem;
-        color: #888;
-      }
-      .user-info .logout {
-        margin-left: auto;
-        font-size: 0.8rem;
-        color: #888;
-        cursor: pointer;
-        text-decoration: underline;
-      }
-
       label {
         display: block;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         margin-bottom: 6px;
         color: var(--green);
+        margin-top: 16px;
       }
-      input[type="email"] {
+      input {
         width: 100%;
         border: 2px solid #ddd;
         border-radius: 12px;
@@ -136,12 +59,10 @@
         outline: none;
         transition: border-color 0.15s;
       }
-      input[type="email"]:focus {
-        border-color: var(--green);
-      }
-      .btn-grant {
+      input:focus { border-color: var(--green); }
+      .btn {
         width: 100%;
-        margin-top: 16px;
+        margin-top: 20px;
         background: var(--green);
         color: #fff;
         border: none;
@@ -152,14 +73,8 @@
         cursor: pointer;
         transition: background 0.15s;
       }
-      .btn-grant:hover {
-        background: #2e7d32;
-      }
-      .btn-grant:disabled {
-        background: #aaa;
-        cursor: not-allowed;
-      }
-
+      .btn:hover { background: #2e7d32; }
+      .btn:disabled { background: #aaa; cursor: not-allowed; }
       .result {
         margin-top: 16px;
         border-radius: 10px;
@@ -168,25 +83,17 @@
         text-align: center;
         display: none;
       }
-      .result.success {
-        background: #e8f5e9;
-        color: #2e7d32;
-      }
-      .result.error {
-        background: #ffebee;
-        color: #c62828;
-      }
-
-      /* Stats */
-      .stats {
-        margin-top: 28px;
-        padding-top: 20px;
+      .result.success { background: #e8f5e9; color: #2e7d32; }
+      .result.error   { background: #ffebee; color: #c62828; }
+      .divider {
+        border: none;
         border-top: 1px solid #eee;
-        text-align: center;
+        margin: 28px 0;
       }
+      .stats { text-align: center; }
       .stats h3 {
-        font-size: 0.85rem;
-        color: #888;
+        font-size: 0.8rem;
+        color: #aaa;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         margin-bottom: 8px;
@@ -196,9 +103,13 @@
         font-weight: 800;
         color: var(--green);
       }
-      .stats .label {
-        font-size: 0.85rem;
-        color: #888;
+      .stats .label { font-size: 0.85rem; color: #888; }
+      .tip {
+        margin-top: 20px;
+        font-size: 0.8rem;
+        color: #aaa;
+        text-align: center;
+        line-height: 1.5;
       }
     </style>
   </head>
@@ -207,51 +118,36 @@
       <div class="logo">⚽ Bolão Copa 2026</div>
       <p class="subtitle">Painel administrativo</p>
 
-      <!-- LOGIN -->
-      <div id="login-section">
-        <button class="btn-google" id="btn-google" onclick="signInGoogle()">
-          <img src="https://www.google.com/favicon.ico" alt="Google" />
-          Entrar com Google
-        </button>
-        <div class="access-denied" id="access-denied">
-          Acesso negado. Somente o administrador pode acessar este painel.
-        </div>
-      </div>
+      <label for="admin-key">Código de acesso</label>
+      <input type="password" id="admin-key" placeholder="••••••••••••" />
 
-      <!-- ADMIN PANEL -->
-      <div id="admin-section">
-        <div class="user-info">
-          <img id="user-photo" src="" alt="" />
-          <div>
-            <div class="name" id="user-name"></div>
-            <div class="email" id="user-email"></div>
-          </div>
-          <span class="logout" onclick="signOut()">Sair</span>
-        </div>
+      <label for="vip-email">E-mail do usuário para liberar VIP</label>
+      <input type="email" id="vip-email" placeholder="usuario@email.com" />
 
-        <label for="vip-email">E-mail do usuário para liberar VIP</label>
-        <input type="email" id="vip-email" placeholder="usuario@email.com" />
-        <button class="btn-grant" id="btn-grant" onclick="grantVip()">
-          ⭐ Liberar VIP
-        </button>
-        <div class="result" id="result"></div>
+      <button class="btn" id="btn-grant" onclick="grantVip()">
+        ⭐ Liberar VIP
+      </button>
 
-        <div class="stats">
-          <h3>Downloads totais</h3>
-          <div class="number" id="dl-count">—</div>
-          <div class="label">desde o lançamento</div>
-        </div>
+      <div class="result" id="result"></div>
+
+      <p class="tip">
+        O código de acesso é o <strong>ADMIN_KEY</strong> definido no arquivo
+        <code>functions/.env</code>
+      </p>
+
+      <hr class="divider" />
+
+      <div class="stats">
+        <h3>Downloads totais</h3>
+        <div class="number" id="dl-count">—</div>
+        <div class="label">desde o lançamento</div>
       </div>
     </div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
     <script>
-      const ADMIN_EMAIL = "gersonlopesr@gmail.com";
-
       const firebaseConfig = {
         apiKey: "AIzaSyCGC-oCFCs1D4kJOjxZReSqZOyFt3QmRwk",
         authDomain: "bolao-copa-2026-4dfc5.web.app",
@@ -262,90 +158,47 @@
       };
 
       firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
       const db = firebase.firestore();
       const functions = firebase.app().functions("southamerica-east1");
 
-      // Handle redirect result when returning from Google sign-in
-      auth.getRedirectResult().catch((err) => {
-        document.getElementById("btn-google").disabled = false;
-        document.getElementById("btn-google").textContent = "Entrar com Google";
-        document.getElementById("access-denied").textContent =
-          "Erro ao fazer login: " + err.message;
-        document.getElementById("access-denied").style.display = "block";
+      // Load download count
+      db.collection("config").doc("stats").get().then((doc) => {
+        const count = doc.exists ? doc.data().downloadCount || 0 : 0;
+        document.getElementById("dl-count").textContent =
+          count.toLocaleString("pt-BR");
       });
-
-      auth.onAuthStateChanged((user) => {
-        if (!user) {
-          showLogin();
-          return;
-        }
-        if (user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-          auth.signOut();
-          document.getElementById("access-denied").textContent =
-            "Acesso negado. Somente o administrador pode acessar este painel.";
-          document.getElementById("access-denied").style.display = "block";
-          return;
-        }
-        showAdmin(user);
-      });
-
-      function showLogin() {
-        document.getElementById("login-section").style.display = "block";
-        document.getElementById("admin-section").style.display = "none";
-      }
-
-      function showAdmin(user) {
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("admin-section").style.display = "block";
-        document.getElementById("user-photo").src = user.photoURL || "";
-        document.getElementById("user-name").textContent = user.displayName || "";
-        document.getElementById("user-email").textContent = user.email;
-
-        db.collection("config").doc("stats").get().then((doc) => {
-          const count = doc.exists ? doc.data().downloadCount || 0 : 0;
-          document.getElementById("dl-count").textContent =
-            count.toLocaleString("pt-BR");
-        });
-      }
-
-      function signInGoogle() {
-        const btn = document.getElementById("btn-google");
-        btn.disabled = true;
-        btn.textContent = "Redirecionando...";
-        const provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({ login_hint: ADMIN_EMAIL });
-        auth.signInWithRedirect(provider);
-      }
-
-      function signOut() {
-        auth.signOut();
-      }
 
       async function grantVip() {
+        const adminKey = document.getElementById("admin-key").value.trim();
         const email = document.getElementById("vip-email").value.trim();
-        if (!email) return;
-
         const btn = document.getElementById("btn-grant");
         const result = document.getElementById("result");
+
+        if (!adminKey) { showResult("error", "Informe o código de acesso."); return; }
+        if (!email)    { showResult("error", "Informe o e-mail do usuário."); return; }
+
         btn.disabled = true;
         btn.textContent = "Aguarde...";
         result.style.display = "none";
 
         try {
-          const grantVipFn = functions.httpsCallable("grantVip");
-          await grantVipFn({ userEmail: email });
-          result.className = "result success";
-          result.textContent = `✓ VIP liberado para ${email}`;
+          const fn = functions.httpsCallable("grantVip");
+          await fn({ adminKey, userEmail: email });
+          showResult("success", `✓ VIP liberado para ${email}`);
           document.getElementById("vip-email").value = "";
         } catch (e) {
-          result.className = "result error";
-          result.textContent = `Erro: ${e.message}`;
+          showResult("error", "Erro: " + e.message);
         } finally {
-          result.style.display = "block";
           btn.disabled = false;
           btn.textContent = "⭐ Liberar VIP";
         }
+      }
+
+      function showResult(type, msg) {
+        const el = document.getElementById("result");
+        el.className = "result " + type;
+        el.textContent = msg;
+        el.style.display = "block";
       }
     </script>
   </body>
