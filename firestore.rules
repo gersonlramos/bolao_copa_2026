@@ -47,5 +47,11 @@ service cloud.firestore {
     match /loginAttempts/{hash} {
       allow read, write: if false;
     }
+
+    // Download counter: public read, public write (only the stats doc)
+    match /config/stats {
+      allow read: if true;
+      allow write: if true;
+    }
   }
 }
