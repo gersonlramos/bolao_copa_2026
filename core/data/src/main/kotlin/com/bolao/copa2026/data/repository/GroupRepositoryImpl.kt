@@ -8,6 +8,7 @@ import com.bolao.copa2026.domain.model.*
 import com.bolao.copa2026.domain.repository.GroupRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
@@ -78,6 +79,13 @@ class GroupRepositoryImpl @Inject constructor(
 
     override suspend fun updateMemberDisplayNameInAllGroups(userId: String, newName: String): Result<Unit> = runCatching {
         groupDataSource.updateMemberDisplayNameInAllGroups(userId, newName)
+    }
+
+    override suspend fun deleteGroup(groupId: String): Result<Unit> = runCatching {
+        val uid = auth.currentUser?.uid ?: error("Not authenticated")
+        val groupSnap = groupDataSource.observeGroup(groupId).first()
+        if (groupSnap?.getString("adminUserId") != uid) error("Apenas o administrador pode excluir o grupo")
+        groupDataSource.deleteGroup(groupId)
     }
 
     private fun generateSimpleCode(): String {

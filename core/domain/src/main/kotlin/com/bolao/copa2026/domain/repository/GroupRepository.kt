@@ -12,4 +12,5 @@ interface GroupRepository {
     fun observeGroup(groupId: String): Flow<Group>
     suspend fun updateScoringSystem(groupId: String, scoringSystem: ScoringSystem): Result<Unit>
     suspend fun updateMemberDisplayNameInAllGroups(userId: String, newName: String): Result<Unit>
+    suspend fun deleteGroup(groupId: String): Result<Unit>
 }

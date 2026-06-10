@@ -106,6 +106,17 @@ class FirestoreGroupDataSource @Inject constructor(
             .await()
     }
 
+    suspend fun deleteGroup(groupId: String) {
+        val groupRef = db.collection("groups").document(groupId)
+        val members = groupRef.collection("members").get().await()
+        if (members.documents.isNotEmpty()) {
+            db.runBatch { batch ->
+                members.documents.forEach { batch.delete(it.reference) }
+            }.await()
+        }
+        groupRef.delete().await()
+    }
+
     suspend fun updateMemberDisplayNameInAllGroups(userId: String, newName: String) {
         val groups = db.collection("groups")
             .whereArrayContains("memberIds", userId)

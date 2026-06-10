@@ -137,6 +137,11 @@ fun BolaoNavGraph(
                 },
                 onRankingClick = { id ->
                     navController.navigate("groups/$id/ranking")
+                },
+                onGroupDeleted = {
+                    navController.navigate(Routes.GROUP_LIST) {
+                        popUpTo(Routes.GROUP_LIST) { inclusive = false }
+                    }
                 }
             )
         }

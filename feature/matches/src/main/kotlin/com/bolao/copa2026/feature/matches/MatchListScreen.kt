@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
@@ -54,12 +55,53 @@ fun MatchListScreen(
     groupId: String,
     onMatchClick: (String) -> Unit,
     onRankingClick: (String) -> Unit,
+    onGroupDeleted: () -> Unit = {},
     viewModel: MatchListViewModel = hiltViewModel()
 ) {
     val state by remember(groupId) { viewModel.uiState(groupId) }.collectAsState()
+    val deleteState by viewModel.deleteState.collectAsState()
+    val (isDeleting, deleted) = deleteState
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(deleted) {
+        if (deleted) onGroupDeleted()
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("Excluir grupo") },
+            text = { Text("Tem certeza que deseja excluir o grupo \"${state.groupName}\"? Essa ação é irreversível e todos os palpites serão perdidos.") },
+            confirmButton = {
+                TextButton(onClick = { showDeleteDialog = false; viewModel.deleteGroup(groupId) }) {
+                    Text("Excluir", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Partidas") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(state.groupName.ifEmpty { "Partidas" }) },
+                actions = {
+                    if (state.isAdmin) {
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Excluir grupo",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { onRankingClick(groupId) },
@@ -70,6 +112,7 @@ fun MatchListScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
+                isDeleting -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 state.isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 state.error != null -> Text(state.error!!, modifier = Modifier.align(Alignment.Center))
                 else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
