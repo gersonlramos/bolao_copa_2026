@@ -1,11 +1,14 @@
 package com.bolao.copa2026.feature.groups
 
+import android.content.Context
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bolao.copa2026.domain.model.Group
 import com.bolao.copa2026.domain.repository.AuthRepository
 import com.bolao.copa2026.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,14 +24,14 @@ data class GroupListUiState(
     val isVip: Boolean = false,
     val isLoading: Boolean = true,
     val showPaywall: Boolean = false,
-    val updateInfo: UpdateInfo? = null,
     val error: String? = null
 )
 
 @HiltViewModel
 class GroupListViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val uiState: StateFlow<GroupListUiState> = combine(
@@ -55,7 +58,7 @@ class GroupListViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 val latestCode = authRepository.getLatestVersionCode() ?: return@launch
-                val currentCode = getCurrentVersionCode()
+                val currentCode = installedVersionCode()
                 if (latestCode > currentCode) {
                     _updateInfo.value = UpdateInfo(
                         latestVersionCode = latestCode,
@@ -65,6 +68,15 @@ class GroupListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun installedVersionCode(): Int {
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+            info.longVersionCode.toInt()
+        else
+            info.versionCode
     }
 
     fun dismissUpdate() { _updateInfo.value = null }
@@ -82,10 +94,3 @@ class GroupListViewModel @Inject constructor(
     fun dismissPaywall() { _showPaywall.value = false }
     val paywallVisible: StateFlow<Boolean> = _showPaywall.asStateFlow()
 }
-
-// Expected to be replaced at compile time via BuildConfig
-private fun getCurrentVersionCode(): Int =
-    runCatching {
-        Class.forName("com.bolao.copa2026.BuildConfig")
-            .getField("VERSION_CODE").getInt(null)
-    }.getOrDefault(1)
