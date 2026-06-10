@@ -15,4 +15,5 @@ interface AuthRepository {
     fun isEmailPasswordUser(): Boolean
     fun currentUser(): Flow<User?>
     suspend fun checkLoginBlock(email: String): LoginBlockStatus
+    suspend fun getLatestVersionCode(): Int?
 }

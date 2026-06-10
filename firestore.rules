@@ -63,5 +63,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
+
+    // App version info: public read (checked on startup by all users)
+    match /config/appVersion {
+      allow read: if true;
+      allow write: if false; // only via Firebase Console or admin script
+    }
   }
 }

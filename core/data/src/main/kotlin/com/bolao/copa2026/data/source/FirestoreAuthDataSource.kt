@@ -16,6 +16,9 @@ class FirestoreAuthDataSource @Inject constructor(
     suspend fun getUserDocument(userId: String): DocumentSnapshot? =
         db.collection("users").document(userId).get().await()
 
+    suspend fun getAppVersionDoc(): DocumentSnapshot? =
+        runCatching { db.collection("config").document("appVersion").get().await() }.getOrNull()
+
     fun observeUserDocument(userId: String): Flow<DocumentSnapshot?> = callbackFlow {
         val reg = db.collection("users").document(userId)
             .addSnapshotListener { snap, err ->

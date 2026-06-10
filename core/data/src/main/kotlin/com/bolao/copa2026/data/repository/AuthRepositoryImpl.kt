@@ -140,6 +140,9 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getLatestVersionCode(): Int? =
+        authDataSource.getAppVersionDoc()?.getLong("latestVersionCode")?.toInt()
+
     override suspend fun checkLoginBlock(email: String): LoginBlockStatus {
         val emailHash = email.lowercase().trim().hashCode().toString()
         val dto = authDataSource.getLoginAttempts(emailHash) ?: return LoginBlockStatus.NotBlocked
